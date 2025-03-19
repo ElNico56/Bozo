@@ -152,7 +152,7 @@ inline Byte Get(Mode mode, Byte src, Byte* mem, int offset) {
 
 inline void Set(Mode mode, Byte dest, Byte value, Byte* mem, int offset) {
 	switch (mode) {
-	case I: break; // should never happen
+	case I: printf("Uh-oh, stinky!\n"); break;
 	case M: mem[dest + offset] = value & 0xFF; break;
 	case P: mem[mem[dest] + offset] = value & 0xFF; break;
 	}
