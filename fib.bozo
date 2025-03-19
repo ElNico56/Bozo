@@ -1,0 +1,17 @@
+loop:
+	out a
+	add a b c           # c = a + b
+	mov b a             # a = b
+	mov c b             # b = c
+	add iter 001 iter   # iter++
+	jlt iter 010 loop   # if (iter < 0x10) goto loop
+	halt                # exit
+
+a:
+	001
+b:
+	001
+c:
+	000
+iter:
+	000

@@ -1,0 +1,15 @@
+
+  mov 001 @A0 002   # mem[A0] = 1
+                    # mem[A1] = 1
+  mov 0A0 @80       # mem[80] = A0
+  mov 0A1 @81       # mem[81] = A1
+  mov 0A2 @82       # mem[82] = A2
+
+loop:
+  add *80 *81 *82   # mem[mem[82]] += mem[mem[81]] + mem[mem[80]]
+  add @80 001 @80   # mem[80]++
+  add @81 001 @81   # mem[81]++
+  add @82 001 @82   # mem[82]++
+  jlt @82 0E0 loop  # if (mem[82] < 224) goto loop
+  show 010          # print memory
+  halt
