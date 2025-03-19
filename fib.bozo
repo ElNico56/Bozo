@@ -1,14 +1,15 @@
 loop:
-	out a
-	add a b c           # c = a + b
-	mov b a             # a = b
-	mov c b             # b = c
-	add iter 001 iter   # iter++
-	jlt iter 010 loop   # if (iter < 0x10) goto loop
-	halt                # exit
+	show @a               # print(a)
+	mov @a @c             # c = a
+	add @b @c             # c += b
+	mov @b @a             # a = b
+	mov @c @b             # b = c
+	add 001 @iter         # iter++
+	jlt @iter 010 @loop   # if (iter < 0x10) goto loop
+	halt                  # exit
 
 a:
-	001
+	000
 b:
 	001
 c:

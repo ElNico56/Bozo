@@ -9,60 +9,156 @@
 typedef unsigned char Byte;
 
 typedef enum {
-	MOV = 0x0, // MOV Src Dest Len
-	ADD = 0x1, // ADD opA opB Dest
-	SUB = 0x2, // SUB opA opB Dest
-	JEQ = 0x3, // JEQ opA opB Loc
-	JGT = 0x4, // JGT opA opB Loc
-	JLT = 0x5, // JLT opA opB Loc
-	JNE = 0x6, // JNE opA opB Loc
-	AND = 0x7, // AND opA opB Dest
+	HALT, MOV, OUT, INP, SHOW,
+	ADD, SUB, MUL, DIV, AND, XOR,
+	JEQ, JNE, JLT, JGT,
 } Code;
 
-typedef enum {
-	I = 0x0,
-	M = 0x1,
-	P = 0x2,
-} Mode;
+typedef enum { I, M, P } Mode;
 
-typedef struct {
-	Code code;
-	Mode mode1;
-	Mode mode2;
-	Mode mode3;
-} Opcode;
+typedef struct { Code code; Mode mode1; Mode mode2; Mode mode3; } Opcode;
 
 typedef struct {
 	Byte mem[MEMORY_SIZE];
 	int halted;
 } VM;
 
-Opcode GetOpcode(Byte byte) {
-	Opcode opcode = { 0 };
-	opcode.code = (byte >> 5) & 0x7;
-	opcode.mode3 = ((byte & 0x1F) / 1) % 3;
-	opcode.mode2 = ((byte & 0x1F) / 3) % 3;
-	opcode.mode1 = ((byte & 0x1F) / 9) % 3;
-	return opcode;
-}
+Opcode OPCODES[] = {
+	{ HALT, I, I, I },
+	{ MOV, I, M, I },{ MOV, M, M, I },{ MOV, P, M, I },
+	{ MOV, I, P, I },{ MOV, M, P, I },{ MOV, P, P, I },
+	{ MOV, I, M, M },{ MOV, M, M, M },{ MOV, P, M, M },
+	{ MOV, I, P, M },{ MOV, M, P, M },{ MOV, P, P, M },
+	{ MOV, I, M, P },{ MOV, M, M, P },{ MOV, P, M, P },
+	{ MOV, I, P, P },{ MOV, M, P, P },{ MOV, P, P, P },
 
-Byte GetOprand(Mode mode, Byte src, Byte* mem) {
+	{ OUT, I, I, I },{ OUT, M, I, I },{ OUT, P, I, I },
+	{ OUT, I, M, I },{ OUT, M, M, I },{ OUT, P, M, I },
+	{ OUT, I, P, I },{ OUT, M, P, I },{ OUT, P, P, I },
+
+	/*------------*/ { INP, M, I, I },{ INP, P, I, I },
+	/*--ElNico56--*/ { INP, M, M, I },{ INP, P, M, I },
+	/*------------*/ { INP, M, P, I },{ INP, P, P, I },
+
+	{ SHOW, I, I, I },{ SHOW, M, I, I },{ SHOW, P, I, I },
+	{ SHOW, I, M, I },{ SHOW, M, M, I },{ SHOW, P, M, I },
+	{ SHOW, I, P, I },{ SHOW, M, P, I },{ SHOW, P, P, I },
+
+	{ ADD, I, M, I },{ ADD, M, M, I },{ ADD, P, M, I },
+	{ ADD, I, P, I },{ ADD, M, P, I },{ ADD, P, P, I },
+	{ ADD, I, M, M },{ ADD, M, M, M },{ ADD, P, M, M },
+	{ ADD, I, P, M },{ ADD, M, P, M },{ ADD, P, P, M },
+	{ ADD, I, M, P },{ ADD, M, M, P },{ ADD, P, M, P },
+	{ ADD, I, P, P },{ ADD, M, P, P },{ ADD, P, P, P },
+
+	{ SUB, I, M, I },{ SUB, M, M, I },{ SUB, P, M, I },
+	{ SUB, I, P, I },{ SUB, M, P, I },{ SUB, P, P, I },
+	{ SUB, I, M, M },{ SUB, M, M, M },{ SUB, P, M, M },
+	{ SUB, I, P, M },{ SUB, M, P, M },{ SUB, P, P, M },
+	{ SUB, I, M, P },{ SUB, M, M, P },{ SUB, P, M, P },
+	{ SUB, I, P, P },{ SUB, M, P, P },{ SUB, P, P, P },
+
+	{ MUL, I, M, I },{ MUL, M, M, I },{ MUL, P, M, I },
+	{ MUL, I, P, I },{ MUL, M, P, I },{ MUL, P, P, I },
+	{ MUL, I, M, M },{ MUL, M, M, M },{ MUL, P, M, M },
+	{ MUL, I, P, M },{ MUL, M, P, M },{ MUL, P, P, M },
+	{ MUL, I, M, P },{ MUL, M, M, P },{ MUL, P, M, P },
+	{ MUL, I, P, P },{ MUL, M, P, P },{ MUL, P, P, P },
+
+	{ DIV, I, M, I },{ DIV, M, M, I },{ DIV, P, M, I },
+	{ DIV, I, P, I },{ DIV, M, P, I },{ DIV, P, P, I },
+	{ DIV, I, M, M },{ DIV, M, M, M },{ DIV, P, M, M },
+	{ DIV, I, P, M },{ DIV, M, P, M },{ DIV, P, P, M },
+	{ DIV, I, M, P },{ DIV, M, M, P },{ DIV, P, M, P },
+	{ DIV, I, P, P },{ DIV, M, P, P },{ DIV, P, P, P },
+
+	{ AND, I, M, I },{ AND, M, M, I },{ AND, P, M, I },
+	{ AND, I, P, I },{ AND, M, P, I },{ AND, P, P, I },
+	{ AND, I, M, M },{ AND, M, M, M },{ AND, P, M, M },
+	{ AND, I, P, M },{ AND, M, P, M },{ AND, P, P, M },
+	{ AND, I, M, P },{ AND, M, M, P },{ AND, P, M, P },
+	{ AND, I, P, P },{ AND, M, P, P },{ AND, P, P, P },
+
+	{ XOR, I, M, I },{ XOR, M, M, I },{ XOR, P, M, I },
+	{ XOR, I, P, I },{ XOR, M, P, I },{ XOR, P, P, I },
+	{ XOR, I, M, M },{ XOR, M, M, M },{ XOR, P, M, M },
+	{ XOR, I, P, M },{ XOR, M, P, M },{ XOR, P, P, M },
+	{ XOR, I, M, P },{ XOR, M, M, P },{ XOR, P, M, P },
+	{ XOR, I, P, P },{ XOR, M, P, P },{ XOR, P, P, P },
+
+	/*------------*/ { JEQ, M, I, I },{ JEQ, P, I, I },
+	{ JEQ, I, M, I },{ JEQ, M, M, I },{ JEQ, P, M, I },
+	{ JEQ, I, P, I },{ JEQ, M, P, I },{ JEQ, P, P, I },
+	/*------------*/ { JEQ, M, I, M },{ JEQ, P, I, M },
+	{ JEQ, I, M, M },{ JEQ, M, M, M },{ JEQ, P, M, M },
+	{ JEQ, I, P, M },{ JEQ, M, P, M },{ JEQ, P, P, M },
+	/*------------*/ { JEQ, M, I, P },{ JEQ, P, I, P },
+	{ JEQ, I, M, P },{ JEQ, M, M, P },{ JEQ, P, M, P },
+	{ JEQ, I, P, P },{ JEQ, M, P, P },{ JEQ, P, P, P },
+
+	/*------------*/ { JNE, M, I, I },{ JNE, P, I, I },
+	{ JNE, I, M, I },{ JNE, M, M, I },{ JNE, P, M, I },
+	{ JNE, I, P, I },{ JNE, M, P, I },{ JNE, P, P, I },
+	/*------------*/ { JNE, M, I, M },{ JNE, P, I, M },
+	{ JNE, I, M, M },{ JNE, M, M, M },{ JNE, P, M, M },
+	{ JNE, I, P, M },{ JNE, M, P, M },{ JNE, P, P, M },
+	/*------------*/ { JNE, M, I, P },{ JNE, P, I, P },
+	{ JNE, I, M, P },{ JNE, M, M, P },{ JNE, P, M, P },
+	{ JNE, I, P, P },{ JNE, M, P, P },{ JNE, P, P, P },
+
+	/*------------*/ { JLT, M, I, I },{ JLT, P, I, I },
+	{ JLT, I, M, I },{ JLT, M, M, I },{ JLT, P, M, I },
+	{ JLT, I, P, I },{ JLT, M, P, I },{ JLT, P, P, I },
+	/*------------*/ { JLT, M, I, M },{ JLT, P, I, M },
+	{ JLT, I, M, M },{ JLT, M, M, M },{ JLT, P, M, M },
+	{ JLT, I, P, M },{ JLT, M, P, M },{ JLT, P, P, M },
+	/*------------*/ { JLT, M, I, P },{ JLT, P, I, P },
+	{ JLT, I, M, P },{ JLT, M, M, P },{ JLT, P, M, P },
+	{ JLT, I, P, P },{ JLT, M, P, P },{ JLT, P, P, P },
+
+	/*------------*/ { JGT, M, I, I },{ JGT, P, I, I },
+	{ JGT, I, M, I },{ JGT, M, M, I },{ JGT, P, M, I },
+	{ JGT, I, P, I },{ JGT, M, P, I },{ JGT, P, P, I },
+	/*------------*/ { JGT, M, I, M },{ JGT, P, I, M },
+	{ JGT, I, M, M },{ JGT, M, M, M },{ JGT, P, M, M },
+	{ JGT, I, P, M },{ JGT, M, P, M },{ JGT, P, P, M },
+	/*------------*/ { JGT, M, I, P },{ JGT, P, I, P },
+	{ JGT, I, M, P },{ JGT, M, M, P },{ JGT, P, M, P },
+	{ JGT, I, P, P },{ JGT, M, P, P },{ JGT, P, P, P },
+};
+
+// MOV Src Dst Len
+// OUT Src Len
+// INP Dst Len
+// SHOW Src Len
+// ADD Src Dst Len
+// SUB Src Dst Len
+// MUL Src Dst Len
+// DIV Src Dst Len
+// AND Src Dst Len
+// XOR Src Dst Len
+// JEQ OpA OpB Loc
+// JNE OpA OpB Loc
+// JLT OpA OpB Loc
+// JGT OpA OpB Loc
+
+inline Byte Get(Mode mode, Byte src, Byte* mem, int offset) {
 	switch (mode) {
 	case I: return src & 0xFF;
-	case M: return mem[src] & 0xFF;
-	case P: return mem[mem[src]] & 0xFF;
+	case M: return mem[src + offset] & 0xFF;
+	case P: return mem[mem[src] + offset] & 0xFF;
 	}
 }
 
-void SetOprand(Mode mode, Byte dest, Byte value, Byte* mem) {
+inline void Set(Mode mode, Byte dest, Byte value, Byte* mem, int offset) {
 	switch (mode) {
-	case I: break;
-	case M: mem[dest] = value & 0xFF; break;
-	case P: mem[mem[dest]] = value & 0xFF; break;
+	case I: break; // should never happen
+	case M: mem[dest + offset] = value & 0xFF; break;
+	case P: mem[mem[dest] + offset] = value & 0xFF; break;
 	}
 }
 
-void HandleJump(Mode mode, Byte location, int condition, Byte* mem) {
+inline void HandleJump(Mode mode, Byte location, int condition, Byte* mem) {
 	if (condition) {
 		switch (mode) {
 		case I: mem[255] += 4 * location; break;
@@ -90,89 +186,91 @@ void PrintMemory(VM* vm, int columns) {
 void Step(VM* vm) {
 	Byte* mem = vm->mem;
 	Byte pc = mem[255];
-	Opcode opcode = GetOpcode(mem[pc]);
+
+	Opcode opcode = OPCODES[mem[pc]];
 	Byte op1 = mem[pc + 1];
 	Byte op2 = mem[pc + 2];
 	Byte op3 = mem[pc + 3];
 
-	Byte a = GetOprand(opcode.mode1, op1, mem);
-	Byte b = GetOprand(opcode.mode2, op2, mem);
-	Byte c = GetOprand(opcode.mode3, op3, mem);
+	Byte a = Get(opcode.mode1, op1, mem, 0);
+	Byte b = Get(opcode.mode2, op2, mem, 0);
+	Byte c = Get(opcode.mode3, op3, mem, 0);
 
 	switch (opcode.code) {
-	case MOV: {
-		Byte length = c == 0 ? 1 : c;
-		if (opcode.mode1 == I) {
-			for (int i = 0; i < length; i++) {
-				SetOprand(opcode.mode2, op2 + i, op1, mem);
-			}
-		} else {
-			for (int i = 0; i < length; i++) {
-				Byte value = GetOprand(opcode.mode1, op1 + i, mem);
-				SetOprand(opcode.mode2, op2 + i, value, mem);
-			}
+	case HALT:
+		break;
+	case MOV:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte value = Get(opcode.mode1, op1, mem, i);
+			Set(opcode.mode2, op2, value, mem, i);
 		}
-		if (opcode.mode2 == I) {
-			// usually useless, destination can't be immediate
-			// these "invalid" opcodes will be used for something else
-			switch (op2) {
-			case 0x0: { // OUT
-				printf("%d\n", a);
-				break;
-			}
-			case 0x1: { // IN
-				scanf("%2X", &a);
-				SetOprand(opcode.mode1, op1, a, mem);
-				break;
-			}
-			case 0x2: { // SHOW
-				PrintMemory(vm, a);
-				break;
-			}
-			default:
-				printf("Invalid opcode\n");
-				break;
-			}
-
+		mem[255] += 4; break;
+	case OUT:
+		for (int i = 0; i < (b == 0 ? 1 : b); i++)
+			printf("%c", Get(opcode.mode1, op1, mem, i));
+		printf("\n");
+		mem[255] += 4; break;
+	case INP:
+		printf("> ");
+		for (int i = 0; i < (b == 0 ? 1 : b); i++) {
+			Byte value = getchar();
+			Set(opcode.mode1, op1, value, mem, i);
 		}
-		mem[255] += 4;
-		break;
-	}
-	case ADD: {
-		SetOprand(opcode.mode3, op3, a + b, mem);
-		mem[255] += 4;
-		break;
-	}
-	case SUB: {
-		SetOprand(opcode.mode3, op3, a - b, mem);
-		mem[255] += 4;
-		break;
-	}
-	case JEQ: {
-		HandleJump(opcode.mode3, op3, a == b, mem);
-		break;
-	}
-	case JGT: {
-		HandleJump(opcode.mode3, op3, a > b, mem);
-		break;
-	}
-	case JLT: {
-		HandleJump(opcode.mode3, op3, a < b, mem);
-		break;
-	}
-	case JNE: {
-		HandleJump(opcode.mode3, op3, a != b, mem);
-		break;
-	}
-	case AND: {
-		SetOprand(opcode.mode3, op3, a & b, mem);
-		mem[255] += 4;
-		break;
-	}
+		mem[255] += 4; break;
+	case SHOW:
+		for (int i = 0; i < (b == 0 ? 1 : b); i++)
+			printf("%3d ", Get(opcode.mode1, op1, mem, i));
+		printf("\n");
+		mem[255] += 4; break;
+	case ADD:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a + b, mem, i);
+		}
+		mem[255] += 4; break;
+	case SUB:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a - b, mem, i);
+		}
+		mem[255] += 4; break;
+	case MUL:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a * b, mem, i);
+		}
+		mem[255] += 4; break;
+	case DIV:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a / b, mem, i);
+		}
+		mem[255] += 4; break;
+	case AND:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a & b, mem, i);
+		}
+		mem[255] += 4; break;
+	case XOR:
+		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+			Byte a = Get(opcode.mode1, op1, mem, i);
+			Byte b = Get(opcode.mode2, op2, mem, i);
+			Set(opcode.mode2, op2, a ^ b, mem, i);
+		}
+		mem[255] += 4; break;
+	case JEQ: HandleJump(opcode.mode3, op3, a == b, mem); break;
+	case JNE: HandleJump(opcode.mode3, op3, a != b, mem); break;
+	case JLT: HandleJump(opcode.mode3, op3, a < b, mem); break;
+	case JGT: HandleJump(opcode.mode3, op3, a > b, mem); break;
 	}
 
 	if (pc == mem[255]) vm->halted = 1;
-
 }
 
 int LoadProgram(VM* vm, const char* filename) {
