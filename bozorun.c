@@ -226,42 +226,42 @@ void Step(VM* vm) {
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a + b, mem, i);
+			Set(opcode.mode2, op2, b + a, mem, i);
 		}
 		mem[255] += 4; break;
 	case SUB:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a - b, mem, i);
+			Set(opcode.mode2, op2, b - a, mem, i);
 		}
 		mem[255] += 4; break;
 	case MUL:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a * b, mem, i);
+			Set(opcode.mode2, op2, b * a, mem, i);
 		}
 		mem[255] += 4; break;
 	case DIV:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a / b, mem, i);
+			Set(opcode.mode2, op2, b / a, mem, i);
 		}
 		mem[255] += 4; break;
 	case AND:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a & b, mem, i);
+			Set(opcode.mode2, op2, b & a, mem, i);
 		}
 		mem[255] += 4; break;
 	case XOR:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
-			Set(opcode.mode2, op2, a ^ b, mem, i);
+			Set(opcode.mode2, op2, b ^ a, mem, i);
 		}
 		mem[255] += 4; break;
 	case JEQ: HandleJump(opcode.mode3, op3, a == b, mem); break;
