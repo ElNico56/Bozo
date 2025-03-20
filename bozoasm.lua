@@ -1,7 +1,7 @@
 -- bozoasm.lua
 
 local OPCODES = {
-	"HALT III",
+	"NOOP III", "HALT III",
 	"MOV IMI", "MOV MMI", "MOV PMI",
 	"MOV IPI", "MOV MPI", "MOV PPI",
 	"MOV IMM", "MOV MMM", "MOV PMM",

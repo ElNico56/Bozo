@@ -9,7 +9,7 @@
 typedef unsigned char Byte;
 
 typedef enum {
-	HALT, MOV, OUT, INP, SHOW,
+	NOOP, HALT, MOV, OUT, INP, SHOW,
 	ADD, SUB, MUL, DIV, AND, XOR,
 	JEQ, JNE, JLT, JGT,
 } Code;
@@ -18,13 +18,10 @@ typedef enum { I, M, P } Mode;
 
 typedef struct { Code code; Mode mode1; Mode mode2; Mode mode3; } Opcode;
 
-typedef struct {
-	Byte mem[MEMORY_SIZE];
-	int halted;
-} VM;
+typedef struct { Byte mem[MEMORY_SIZE]; int halted; } VM;
 
 Opcode OPCODES[] = {
-	{ HALT, I, I, I },
+	{ NOOP, I, I, I },{ HALT, I, I, I },
 	{ MOV, I, M, I },{ MOV, M, M, I },{ MOV, P, M, I },
 	{ MOV, I, P, I },{ MOV, M, P, I },{ MOV, P, P, I },
 	{ MOV, I, M, M },{ MOV, M, M, M },{ MOV, P, M, M },
@@ -197,8 +194,8 @@ void Step(VM* vm) {
 	Byte c = Get(opcode.mode3, op3, mem, 0);
 
 	switch (opcode.code) {
-	case HALT:
-		break;
+	case NOOP: mem[255] += 4; break;
+	case HALT: break;
 	case MOV:
 		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
 			Byte value = Get(opcode.mode1, op1, mem, i);
