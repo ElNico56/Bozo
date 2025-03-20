@@ -97,7 +97,7 @@ end
 
 local function parse_mode(operand)
 	if operand:match"^%-%x%x$" then
-		return "I", (-tonumber(operand, 16)) % 256
+		return "I", tonumber(operand, 16) % 256
 	elseif operand:match"^0%x%x$" then
 		return "I", tonumber(operand, 16) % 256
 	elseif operand:match"^@%x%x$" then
