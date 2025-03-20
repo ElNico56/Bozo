@@ -197,65 +197,65 @@ void Step(VM* vm) {
 	case NOOP: mem[255] += 4; break;
 	case HALT: break;
 	case MOV:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte value = Get(opcode.mode1, op1, mem, i);
 			Set(opcode.mode2, op2, value, mem, i);
 		}
 		mem[255] += 4; break;
 	case OUT:
-		for (int i = 0; i < (b == 0 ? 1 : b); i++)
+		for (int i = 0; i < b + (b == 0); i++)
 			printf("%c", Get(opcode.mode1, op1, mem, i));
 		printf("\n");
 		mem[255] += 4; break;
 	case INP:
 		printf("> ");
-		for (int i = 0; i < (b == 0 ? 1 : b); i++) {
+		for (int i = 0; i < b + (b == 0); i++) {
 			Byte value = getchar();
 			Set(opcode.mode1, op1, value, mem, i);
 		}
 		mem[255] += 4; break;
 	case SHOW:
-		for (int i = 0; i < (b == 0 ? 1 : b); i++)
+		for (int i = 0; i < b + (b == 0); i++)
 			printf("%3d ", Get(opcode.mode1, op1, mem, i));
 		printf("\n");
 		mem[255] += 4; break;
 	case ADD:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b + a, mem, i);
 		}
 		mem[255] += 4; break;
 	case SUB:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b - a, mem, i);
 		}
 		mem[255] += 4; break;
 	case MUL:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b * a, mem, i);
 		}
 		mem[255] += 4; break;
 	case DIV:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b / a, mem, i);
 		}
 		mem[255] += 4; break;
 	case AND:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b & a, mem, i);
 		}
 		mem[255] += 4; break;
 	case XOR:
-		for (int i = 0; i < (c == 0 ? 1 : c); i++) {
+		for (int i = 0; i < c + (c == 0); i++) {
 			Byte a = Get(opcode.mode1, op1, mem, i);
 			Byte b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b ^ a, mem, i);
