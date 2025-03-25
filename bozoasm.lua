@@ -186,7 +186,7 @@ end
 local function write_file(filename, data)
 	local file = io.open(filename, "wb")
 	if not file then error("Could not write file: "..filename) end
-	for i = 1, 65536 // 2 do
+	for i = 1, 65536 do
 		local value = data[i] or 0
 		file:write(string.char(value % 256, (value // 256) % 256))
 	end
