@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
 	if (LoadProgram(&vm, argv[1]) != 0) return 1;
 
 	while (!vm.halted) Step(&vm);
-	PrintMemory(&vm, 0, 256, 4);
+	// PrintMemory(&vm, 0, 256, 4);
 
 	return 0;
 }
