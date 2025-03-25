@@ -5,14 +5,14 @@ loop:
 	mov @b @a             # a = b
 	mov @c @b             # b = c
 	add 001 @iter         # iter++
-	jlt @iter 010 @loop   # if (iter < 0x10) goto loop
+	jlt @iter 10 @loop   # if (iter < 0x10) goto loop
 	halt                  # exit
 
 a:
-	000
+	0
 b:
-	001
+	1
 c:
-	000
+	0
 iter:
-	000
+	0
