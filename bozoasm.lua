@@ -95,15 +95,13 @@ for i, v in ipairs(OPCODES) do
 	OPCODES[v] = i - 1
 end
 
-local function parse_mode(operand)
-	if operand:match"^%-%x%x$" then
-		return "I", tonumber(operand, 16) % 256
-	elseif operand:match"^0%x%x$" then
-		return "I", tonumber(operand, 16) % 256
-	elseif operand:match"^@%x%x$" then
-		return "M", tonumber(operand:sub(2), 16) % 256
-	elseif operand:match"^%*%x%x$" then
-		return "P", tonumber(operand:sub(2), 16) % 256
+local function parse_operand(operand)
+	if operand:match"^@%x+$" then
+		return "M", tonumber(operand:sub(2), 16) % 65536
+	elseif operand:match"^*%x+$" then
+		return "P", tonumber(operand:sub(2), 16) % 65536
+	elseif operand:match"^-?%x+$" then
+		return "I", tonumber(operand, 16) % 65536
 	else
 		return "I", 0
 	end
@@ -113,8 +111,10 @@ local function resolve_label(labels, label)
 	if labels[label:sub(2)] then
 		if label:sub(1, 1) == "@" then
 			return "M", labels[label:sub(2)]
-		else
+		elseif label:sub(1, 1) == "*" then
 			return "P", labels[label:sub(2)]
+		else
+			return "I", labels[label:sub(2)]
 		end
 	end
 	return nil, nil
@@ -143,13 +143,13 @@ local function assemble(lines)
 				tokens[#tokens+1] = token:upper()
 			end
 
-			tokens[2] = tokens[2] or "000"
-			tokens[3] = tokens[3] or "000"
-			tokens[4] = tokens[4] or "000"
+			tokens[2] = tokens[2] or "0"
+			tokens[3] = tokens[3] or "0"
+			tokens[4] = tokens[4] or "0"
 
-			local m1, v1 = parse_mode(tokens[2])
-			local m2, v2 = parse_mode(tokens[3])
-			local m3, v3 = parse_mode(tokens[4])
+			local m1, v1 = parse_operand(tokens[2])
+			local m2, v2 = parse_operand(tokens[3])
+			local m3, v3 = parse_operand(tokens[4])
 
 			-- Resolve label addresse
 			local m, v = nil, nil
@@ -162,15 +162,16 @@ local function assemble(lines)
 
 			local opcode = OPCODES[tokens[1].." "..m1..m2..m3] or -1
 			if opcode == -1 then
-				_, opcode = parse_mode(tokens[1])
+				_, opcode = parse_operand(tokens[1])
 			end
-			print(address, tokens[1], m1..m2..m3, opcode, v1, v2, v3)
-			table.insert(binary, string.char(opcode, v1, v2, v3))
+			binary[#binary+1] = opcode
+			binary[#binary+1] = v1
+			binary[#binary+1] = v2
+			binary[#binary+1] = v3
 			address = address + 4
 		end
 	end
-
-	return table.concat(binary)
+	return binary
 end
 
 local function read_file(filename)
@@ -183,10 +184,12 @@ local function read_file(filename)
 end
 
 local function write_file(filename, data)
-	for i = 1, 256 - #data do data = data.."\0" end
 	local file = io.open(filename, "wb")
 	if not file then error("Could not write file: "..filename) end
-	file:write(data)
+	for i = 1, 65536 // 2 do
+		local value = data[i] or 0
+		file:write(string.char(value % 256, (value // 256) % 256))
+	end
 	file:close()
 end
 
