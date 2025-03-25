@@ -7,7 +7,7 @@
 
 #define MEMORY_SIZE 65536  // 16-bit memory space
 
-typedef uint16_t Byte;  // 16-bit integers
+typedef uint16_t Word;  // 16-bit integers
 
 typedef enum {
 	NOOP, HALT, MOV, OUT, INP, SHOW,
@@ -19,110 +19,10 @@ typedef enum { I, M, P } Mode;
 
 typedef struct { Code code; Mode mode1; Mode mode2; Mode mode3; } Opcode;
 
-typedef struct { Byte mem[MEMORY_SIZE]; int halted; } VM;
+typedef struct { Word mem[MEMORY_SIZE]; int halted; } VM;
 
 Opcode OPCODES[] = {
-	{ NOOP, I, I, I },{ HALT, I, I, I },
-	{ MOV, I, M, I },{ MOV, M, M, I },{ MOV, P, M, I },
-	{ MOV, I, P, I },{ MOV, M, P, I },{ MOV, P, P, I },
-	{ MOV, I, M, M },{ MOV, M, M, M },{ MOV, P, M, M },
-	{ MOV, I, P, M },{ MOV, M, P, M },{ MOV, P, P, M },
-	{ MOV, I, M, P },{ MOV, M, M, P },{ MOV, P, M, P },
-	{ MOV, I, P, P },{ MOV, M, P, P },{ MOV, P, P, P },
-
-	{ OUT, I, I, I },{ OUT, M, I, I },{ OUT, P, I, I },
-	{ OUT, I, M, I },{ OUT, M, M, I },{ OUT, P, M, I },
-	{ OUT, I, P, I },{ OUT, M, P, I },{ OUT, P, P, I },
-
-	/*------------*/ { INP, M, I, I },{ INP, P, I, I },
-	/*--ElNico56--*/ { INP, M, M, I },{ INP, P, M, I },
-	/*------------*/ { INP, M, P, I },{ INP, P, P, I },
-
-	{ SHOW, I, I, I },{ SHOW, M, I, I },{ SHOW, P, I, I },
-	{ SHOW, I, M, I },{ SHOW, M, M, I },{ SHOW, P, M, I },
-	{ SHOW, I, P, I },{ SHOW, M, P, I },{ SHOW, P, P, I },
-
-	{ ADD, I, M, I },{ ADD, M, M, I },{ ADD, P, M, I },
-	{ ADD, I, P, I },{ ADD, M, P, I },{ ADD, P, P, I },
-	{ ADD, I, M, M },{ ADD, M, M, M },{ ADD, P, M, M },
-	{ ADD, I, P, M },{ ADD, M, P, M },{ ADD, P, P, M },
-	{ ADD, I, M, P },{ ADD, M, M, P },{ ADD, P, M, P },
-	{ ADD, I, P, P },{ ADD, M, P, P },{ ADD, P, P, P },
-
-	{ SUB, I, M, I },{ SUB, M, M, I },{ SUB, P, M, I },
-	{ SUB, I, P, I },{ SUB, M, P, I },{ SUB, P, P, I },
-	{ SUB, I, M, M },{ SUB, M, M, M },{ SUB, P, M, M },
-	{ SUB, I, P, M },{ SUB, M, P, M },{ SUB, P, P, M },
-	{ SUB, I, M, P },{ SUB, M, M, P },{ SUB, P, M, P },
-	{ SUB, I, P, P },{ SUB, M, P, P },{ SUB, P, P, P },
-
-	{ MUL, I, M, I },{ MUL, M, M, I },{ MUL, P, M, I },
-	{ MUL, I, P, I },{ MUL, M, P, I },{ MUL, P, P, I },
-	{ MUL, I, M, M },{ MUL, M, M, M },{ MUL, P, M, M },
-	{ MUL, I, P, M },{ MUL, M, P, M },{ MUL, P, P, M },
-	{ MUL, I, M, P },{ MUL, M, M, P },{ MUL, P, M, P },
-	{ MUL, I, P, P },{ MUL, M, P, P },{ MUL, P, P, P },
-
-	{ DIV, I, M, I },{ DIV, M, M, I },{ DIV, P, M, I },
-	{ DIV, I, P, I },{ DIV, M, P, I },{ DIV, P, P, I },
-	{ DIV, I, M, M },{ DIV, M, M, M },{ DIV, P, M, M },
-	{ DIV, I, P, M },{ DIV, M, P, M },{ DIV, P, P, M },
-	{ DIV, I, M, P },{ DIV, M, M, P },{ DIV, P, M, P },
-	{ DIV, I, P, P },{ DIV, M, P, P },{ DIV, P, P, P },
-
-	{ AND, I, M, I },{ AND, M, M, I },{ AND, P, M, I },
-	{ AND, I, P, I },{ AND, M, P, I },{ AND, P, P, I },
-	{ AND, I, M, M },{ AND, M, M, M },{ AND, P, M, M },
-	{ AND, I, P, M },{ AND, M, P, M },{ AND, P, P, M },
-	{ AND, I, M, P },{ AND, M, M, P },{ AND, P, M, P },
-	{ AND, I, P, P },{ AND, M, P, P },{ AND, P, P, P },
-
-	{ XOR, I, M, I },{ XOR, M, M, I },{ XOR, P, M, I },
-	{ XOR, I, P, I },{ XOR, M, P, I },{ XOR, P, P, I },
-	{ XOR, I, M, M },{ XOR, M, M, M },{ XOR, P, M, M },
-	{ XOR, I, P, M },{ XOR, M, P, M },{ XOR, P, P, M },
-	{ XOR, I, M, P },{ XOR, M, M, P },{ XOR, P, M, P },
-	{ XOR, I, P, P },{ XOR, M, P, P },{ XOR, P, P, P },
-
-	/*------------*/ { JEQ, M, I, I },{ JEQ, P, I, I },
-	{ JEQ, I, M, I },{ JEQ, M, M, I },{ JEQ, P, M, I },
-	{ JEQ, I, P, I },{ JEQ, M, P, I },{ JEQ, P, P, I },
-	/*------------*/ { JEQ, M, I, M },{ JEQ, P, I, M },
-	{ JEQ, I, M, M },{ JEQ, M, M, M },{ JEQ, P, M, M },
-	{ JEQ, I, P, M },{ JEQ, M, P, M },{ JEQ, P, P, M },
-	/*------------*/ { JEQ, M, I, P },{ JEQ, P, I, P },
-	{ JEQ, I, M, P },{ JEQ, M, M, P },{ JEQ, P, M, P },
-	{ JEQ, I, P, P },{ JEQ, M, P, P },{ JEQ, P, P, P },
-
-	/*------------*/ { JNE, M, I, I },{ JNE, P, I, I },
-	{ JNE, I, M, I },{ JNE, M, M, I },{ JNE, P, M, I },
-	{ JNE, I, P, I },{ JNE, M, P, I },{ JNE, P, P, I },
-	/*------------*/ { JNE, M, I, M },{ JNE, P, I, M },
-	{ JNE, I, M, M },{ JNE, M, M, M },{ JNE, P, M, M },
-	{ JNE, I, P, M },{ JNE, M, P, M },{ JNE, P, P, M },
-	/*------------*/ { JNE, M, I, P },{ JNE, P, I, P },
-	{ JNE, I, M, P },{ JNE, M, M, P },{ JNE, P, M, P },
-	{ JNE, I, P, P },{ JNE, M, P, P },{ JNE, P, P, P },
-
-	/*------------*/ { JLT, M, I, I },{ JLT, P, I, I },
-	{ JLT, I, M, I },{ JLT, M, M, I },{ JLT, P, M, I },
-	{ JLT, I, P, I },{ JLT, M, P, I },{ JLT, P, P, I },
-	/*------------*/ { JLT, M, I, M },{ JLT, P, I, M },
-	{ JLT, I, M, M },{ JLT, M, M, M },{ JLT, P, M, M },
-	{ JLT, I, P, M },{ JLT, M, P, M },{ JLT, P, P, M },
-	/*------------*/ { JLT, M, I, P },{ JLT, P, I, P },
-	{ JLT, I, M, P },{ JLT, M, M, P },{ JLT, P, M, P },
-	{ JLT, I, P, P },{ JLT, M, P, P },{ JLT, P, P, P },
-
-	/*------------*/ { JGT, M, I, I },{ JGT, P, I, I },
-	{ JGT, I, M, I },{ JGT, M, M, I },{ JGT, P, M, I },
-	{ JGT, I, P, I },{ JGT, M, P, I },{ JGT, P, P, I },
-	/*------------*/ { JGT, M, I, M },{ JGT, P, I, M },
-	{ JGT, I, M, M },{ JGT, M, M, M },{ JGT, P, M, M },
-	{ JGT, I, P, M },{ JGT, M, P, M },{ JGT, P, P, M },
-	/*------------*/ { JGT, M, I, P },{ JGT, P, I, P },
-	{ JGT, I, M, P },{ JGT, M, M, P },{ JGT, P, M, P },
-	{ JGT, I, P, P },{ JGT, M, P, P },{ JGT, P, P, P },
+	#include "opcodes.txt"
 };
 
 // MOV Src Dst Len
@@ -141,17 +41,16 @@ Opcode OPCODES[] = {
 // JGT OpA OpB Loc
 
 
-inline Byte Get(Mode mode, Byte src, Byte* mem, int offset) {
+inline Word Get(Mode mode, Word src, Word* mem, int offset) {
 	switch (mode) {
 	case I: return src;
 	case M: return mem[src + offset];
 	case P: return mem[mem[src] + offset];
 	}
-	return 0;
 }
 
 
-inline void Set(Mode mode, Byte dest, Byte value, Byte* mem, int offset) {
+inline void Set(Mode mode, Word dest, Word value, Word* mem, int offset) {
 	switch (mode) {
 	case I: printf("Error: Cannot write to immediate values!\n"); break;
 	case M: mem[dest + offset] = value; break;
@@ -160,7 +59,7 @@ inline void Set(Mode mode, Byte dest, Byte value, Byte* mem, int offset) {
 }
 
 
-inline void HandleJump(Mode mode, Byte location, int condition, Byte* mem) {
+inline void HandleJump(Mode mode, Word location, int condition, Word* mem) {
 	if (condition) {
 		switch (mode) {
 		case I: mem[MEMORY_SIZE - 1] += 4 * location; break;
@@ -174,24 +73,24 @@ inline void HandleJump(Mode mode, Byte location, int condition, Byte* mem) {
 
 
 void Step(VM* vm) {
-	Byte* mem = vm->mem;
-	Byte pc = mem[MEMORY_SIZE - 1];
+	Word* mem = vm->mem;
+	Word pc = mem[MEMORY_SIZE - 1];
 
 	Opcode opcode = OPCODES[mem[pc]];
-	Byte op1 = mem[pc + 1];
-	Byte op2 = mem[pc + 2];
-	Byte op3 = mem[pc + 3];
+	Word op1 = mem[pc + 1];
+	Word op2 = mem[pc + 2];
+	Word op3 = mem[pc + 3];
 
-	Byte a = Get(opcode.mode1, op1, mem, 0);
-	Byte b = Get(opcode.mode2, op2, mem, 0);
-	Byte c = Get(opcode.mode3, op3, mem, 0);
+	Word a = Get(opcode.mode1, op1, mem, 0);
+	Word b = Get(opcode.mode2, op2, mem, 0);
+	Word c = Get(opcode.mode3, op3, mem, 0);
 
 	switch (opcode.code) {
 	case NOOP: mem[MEMORY_SIZE - 1] += 4; break;
 	case HALT: vm->halted = 1; break;
 	case MOV:
 		for (int i = 0; i < c + (c == 0); i++) {
-			Byte value = Get(opcode.mode1, op1, mem, i);
+			Word value = Get(opcode.mode1, op1, mem, i);
 			Set(opcode.mode2, op2, value, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
@@ -205,7 +104,7 @@ void Step(VM* vm) {
 	case INP:
 		printf("> ");
 		for (int i = 0; i < b + (b == 0); i++) {
-			Byte value = getchar();
+			Word value = getchar();
 			Set(opcode.mode1, op1, value, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
@@ -218,33 +117,49 @@ void Step(VM* vm) {
 		break;
 	case ADD:
 		for (int i = 0; i < c + (c == 0); i++) {
-			Byte a = Get(opcode.mode1, op1, mem, i);
-			Byte b = Get(opcode.mode2, op2, mem, i);
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b + a, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
 		break;
 	case SUB:
 		for (int i = 0; i < c + (c == 0); i++) {
-			Byte a = Get(opcode.mode1, op1, mem, i);
-			Byte b = Get(opcode.mode2, op2, mem, i);
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b - a, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
 		break;
 	case MUL:
 		for (int i = 0; i < c + (c == 0); i++) {
-			Byte a = Get(opcode.mode1, op1, mem, i);
-			Byte b = Get(opcode.mode2, op2, mem, i);
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
 			Set(opcode.mode2, op2, b * a, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
 		break;
 	case DIV:
 		for (int i = 0; i < c + (c == 0); i++) {
-			Byte a = Get(opcode.mode1, op1, mem, i);
-			Byte b = Get(opcode.mode2, op2, mem, i);
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
 			if (a != 0) Set(opcode.mode2, op2, b / a, mem, i);
+		}
+		mem[MEMORY_SIZE - 1] += 4;
+		break;
+	case AND:
+		for (int i = 0; i < c + (c == 0); i++) {
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
+			if (a != 0) Set(opcode.mode2, op2, b & a, mem, i);
+		}
+		mem[MEMORY_SIZE - 1] += 4;
+		break;
+	case XOR:
+		for (int i = 0; i < c + (c == 0); i++) {
+			Word a = Get(opcode.mode1, op1, mem, i);
+			Word b = Get(opcode.mode2, op2, mem, i);
+			if (a != 0) Set(opcode.mode2, op2, b ^ a, mem, i);
 		}
 		mem[MEMORY_SIZE - 1] += 4;
 		break;
@@ -264,7 +179,7 @@ int LoadProgram(VM* vm, const char* filename) {
 		return -1;
 	}
 
-	fread(vm->mem, sizeof(Byte), MEMORY_SIZE, file);
+	fread(vm->mem, sizeof(Word), MEMORY_SIZE, file);
 	fclose(file);
 	return 0;
 }
