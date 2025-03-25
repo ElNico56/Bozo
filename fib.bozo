@@ -5,7 +5,7 @@ loop:
 	mov @b @a             # a = b
 	mov @c @b             # b = c
 	add 001 @iter         # iter++
-	jlt @iter 10 @loop   # if (iter < 0x10) goto loop
+	jlt @iter 18 @loop   # if (iter < 0x10) goto loop
 	halt                  # exit
 
 a:
