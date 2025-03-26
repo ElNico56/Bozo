@@ -100,7 +100,7 @@ local function parse_operand(operand)
 		return "M", tonumber(operand:sub(2), 16) % 65536
 	elseif operand:match"^*%x+$" then
 		return "P", tonumber(operand:sub(2), 16) % 65536
-	elseif operand:match"^-?%x+$" then
+	elseif tonumber(operand, 16) then
 		return "I", tonumber(operand, 16) % 65536
 	else
 		return "I", 0
