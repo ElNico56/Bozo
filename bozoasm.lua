@@ -108,7 +108,7 @@ local function parse_operand(operand)
 end
 
 local function resolve_label(labels, label)
-	if labels[label:sub(2)] then
+	if labels[label:sub(2)] or labels[label] then
 		if label:sub(1, 1) == "@" then
 			return "M", labels[label:sub(2)]
 		elseif label:sub(1, 1) == "*" then
