@@ -114,7 +114,9 @@ local function resolve_label(labels, label)
 		elseif label:sub(1, 1) == "*" then
 			return "P", labels[label:sub(2)]
 		else
-			return "I", labels[label:sub(2)]
+			return "I", labels[label]
+			-- this would return the actual address as
+			-- an immediate valu, you could use this as enums
 		end
 	end
 	return nil, nil
