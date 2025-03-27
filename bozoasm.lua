@@ -124,25 +124,36 @@ end
 
 local function assemble(lines)
 	local labels, binary, address = {}, {}, 0
-
+	for i = 1, 65536 do
+		binary[i] = 0
+	end
 	-- First pass: Collect labels
 	for _, line in ipairs(lines) do
-		line = line:gsub("#.*", ""):match"^%s*(.-)%s*$" -- Remove comments & trim
+		line = line:gsub("#.*", ""):match"^%s*(.-)%s*$"
 		if line ~= "" then
 			local label = line:match"^(%w+):$"
-			if label then labels[label:upper()] = address end
+			if label then labels[label] = address end
+			local org = line:match"^%.org (%x+)$"
 			address = address + (label and 0 or 4)
+			if org then address = tonumber(org, 16) end
 		end
 	end
-
 	-- Second pass: Generate machine code
 	address = 0
 	for _, line in ipairs(lines) do
 		line = line:gsub("#.*", ""):match"^%s*(.-)%s*$"
-		if line ~= "" and not line:match"^%w+:$" then
+		if line:match"^%.org %x+$" then
+			address = tonumber(line:match"^%.org (%x+)$", 16)
+			-- print("org", address)
+		elseif line:match"^%.ret @?%w+$" then
+			local ret = line:match"^%.ret (@?[%w]+)$"
+			local _, add = resolve_label(labels, ret)
+			-- print("ret", ret)
+			binary[#binary] = add
+		elseif line ~= "" and not line:match"^%w+:$" then
 			local tokens = {}
 			for token in line:gmatch"%S+" do
-				tokens[#tokens+1] = token:upper()
+				tokens[#tokens+1] = token
 			end
 
 			tokens[2] = tokens[2] or "0"
@@ -162,14 +173,16 @@ local function assemble(lines)
 			m, v = resolve_label(labels, tokens[4])
 			m3, v3 = m or m3, v or v3
 
-			local opcode = OPCODES[tokens[1].." "..m1..m2..m3] or -1
+			local opcode = OPCODES[tokens[1]:upper().." "..m1..m2..m3] or -1
 			if opcode == -1 then
 				_, opcode = parse_operand(tokens[1])
 			end
-			binary[#binary+1] = opcode
-			binary[#binary+1] = v1
-			binary[#binary+1] = v2
-			binary[#binary+1] = v3
+
+			-- print(address, opcode, v1, v2, v3)
+			binary[address + 1] = opcode
+			binary[address + 2] = v1
+			binary[address + 3] = v2
+			binary[address + 4] = v3
 			address = address + 4
 		end
 	end

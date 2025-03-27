@@ -1,3 +1,6 @@
+.ret @loop
+
+.org 100
 loop:
 	show @a               # print(a)
 	mov @a @c             # c = a
@@ -5,14 +8,18 @@ loop:
 	mov @b @a             # a = b
 	mov @c @b             # b = c
 	add 001 @iter         # iter++
-	jlt @iter 18 @loop   # if (iter < 0x10) goto loop
+	jlt @iter 18 @loop    # if (iter < 0x10) goto loop
 	halt                  # exit
 
+.org 200
 a:
 	0
+.org 201
 b:
 	1
+.org 202
 c:
 	0
+.org 203
 iter:
 	0
